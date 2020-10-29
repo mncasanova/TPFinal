@@ -9,11 +9,11 @@ class Trabajo:
     def __init__(
         self,
         cliente,
-        fecha_ingreso,
         fecha_entrega_propuesta,
-        fecha_entrega_real,
         descripcion,
-        retirado,
+        fecha_ingreso=datetime.date.today(),
+        fecha_entrega_real=None,
+        retirado=False,
         id_trabajo=None,
     ):
         """Recibe un objeto cliente, una fecha de ingreso (objeto datetime),
@@ -26,3 +26,13 @@ class Trabajo:
         self.descripcion = descripcion
         self.retirado = retirado
         self.id_trabajo = id_trabajo
+
+    def __str__(self):
+        cadena = (
+            f"ID Trabajo: {self.id_trabajo} - ID Cliente: {self.cliente.id_cliente}\n"
+        )
+        cadena += f"Fecha ingreso: {self.fecha_ingreso} - Fecha propuesta: {self.fecha_entrega_propuesta}\n"
+        cadena += f"Descripcion: {self.descripcion}\n"
+        cadena += f"Fecha entrega real: {self.fecha_entrega_real}\n"
+        cadena += f"Retirado: {self.retirado}\n"
+        return cadena

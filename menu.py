@@ -1,7 +1,9 @@
 #! /usr/bin/env python3
 import sys
+import datetime
 from listaClientes import ListaClientes
 from repositorioClientes import RepositorioClientes
+from listaTrabajos import ListaTrabajos
 
 
 class Menu:
@@ -10,12 +12,15 @@ class Menu:
     def __init__(self):
         self.rc = RepositorioClientes()
         self.lista_clientes = ListaClientes()
+        self.lista_trabajos = ListaTrabajos()
         self.opciones = {
             "0": self.salir,
             "1": self.mostrar_clientes,
             "2": self.nuevo_cliente,
             "3": self.eliminar_cliente,
             "4": self.modificar_cliente,
+            "5": self.nuevo_trabajo,
+            "6": self.mostrar_trabajos,
         }
 
     def mostrar_menu(self):
@@ -27,6 +32,8 @@ Menú del sistema:
 2. Ingresar los datos de un nuevo cliente
 3. Eliminar cliente
 4. Modificar cliente
+5. Cargar trabajo nuevo
+6. Mostrar todos los trabajos 
 """
         )
 
@@ -114,6 +121,40 @@ Menú del sistema:
                 print("El cliente se modifico correctamente")
             else:
                 print("No se pudo modificar")
+
+    def nuevo_trabajo(self):
+        id_cliente = input("Ingrese el ID del cliente: ")
+        cliente = self.rc.get_one(id_cliente)
+        if cliente is None:
+            print("No existe el cliente")
+
+        else:
+            date_entry = input("Ingrese una fecha de ingreso con formato YYYY-MM-DD: ")
+            year, month, day = map(int, date_entry.split("-"))
+            fecha_ingreso = datetime.date(year, month, day)
+
+            date_entry = input(
+                "Ingrese una fecha de entrega propuesta con formato YYYY-MM-DD: "
+            )
+            year, month, day = map(int, date_entry.split("-"))
+            fecha_entrega_propuesta = datetime.date(year, month, day)
+
+            descripcion = input("Ingrese una descripcion para el trabajo: ")
+            t = self.lista_trabajos.nuevo_trabajo(
+                cliente, fecha_entrega_propuesta, descripcion, fecha_ingreso
+            )
+
+            if t is None:
+                print("Error al cargar el trabajo")
+            else:
+                print("Trabajo cargado correctamente")
+
+    def mostrar_trabajos(self, lista=None):
+        if lista == None:
+            lista = self.lista_trabajos.lista
+        for Trabajos in lista:
+            print(Trabajos)
+            print("==============================")
 
     def salir(self):
         print("Gracias por utilizar el sistema.")
