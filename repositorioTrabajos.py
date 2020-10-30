@@ -155,10 +155,23 @@ class RepositorioTrabajos(Repositorio):
 
         return Trabajo(
             cliente,
-            fecha_ingreso,
             fecha_entrega_propuesta,
-            fecha_entrega_real,
             descripcion,
+            fecha_ingreso,
+            fecha_entrega_real,
             retirado,
             id_trabajo,
         )
+
+    def get_by_client_id(self, id_cliente):
+        """Devuelve una lista de trabajos finalizados, sin retirar"""
+        consulta = "SELECT id_cliente, fecha_ingreso, fecha_entrega_propuesta, \
+                  fecha_entrega_real, descripcion, retirado, id FROM trabajos WHERE id_cliente = id_cliente"
+        result = self.cursor.execute(consulta).fetchall()
+        if result == None:
+            return None
+        else:
+            lista_trabajos = []
+            for t in result:
+                lista_trabajos.append(self._obtener_trabajo_de_result(t))
+            return lista_trabajos

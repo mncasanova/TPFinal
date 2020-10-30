@@ -3,7 +3,9 @@ import sys
 import datetime
 from listaClientes import ListaClientes
 from repositorioClientes import RepositorioClientes
+from repositorioTrabajos import RepositorioTrabajos
 from listaTrabajos import ListaTrabajos
+from informe import Informe
 
 
 class Menu:
@@ -11,8 +13,7 @@ class Menu:
 
     def __init__(self):
         self.rc = RepositorioClientes()
-        self.lista_clientes = ListaClientes()
-        self.lista_trabajos = ListaTrabajos()
+        self.rt = RepositorioTrabajos()
         self.opciones = {
             "0": self.salir,
             "1": self.mostrar_clientes,
@@ -21,6 +22,11 @@ class Menu:
             "4": self.modificar_cliente,
             "5": self.nuevo_trabajo,
             "6": self.mostrar_trabajos,
+            "7": self.modificar_trabajo,
+            "8": self.marcar_finalizado,
+            "9": self.marcar_entregado,
+            "10": self.eliminar_trabajo,
+            "11": self.imprimir_informe
         }
 
     def mostrar_menu(self):
@@ -34,6 +40,11 @@ Menú del sistema:
 4. Modificar cliente
 5. Cargar trabajo nuevo
 6. Mostrar todos los trabajos 
+7. Modificar trabajo
+8. Marcar trabajo como finalizado
+9. Marcar trabajo como entregado
+10. Eliminar trabajo
+11. Imprimir informe de trabajos por cliente
 """
         )
 
@@ -50,7 +61,7 @@ Menú del sistema:
 
     def mostrar_clientes(self, lista=None):
         if lista == None:
-            lista = self.lista_clientes.lista
+            lista = ListaClientes().lista
         for Cliente in lista:
             print(Cliente)
             print("==============================")
@@ -68,11 +79,11 @@ Menú del sistema:
         tel = input("Ingrese el telefono: ")
         mail = input("Ingrese el correo electronico: ")
         if tipo in ("C", "c"):
-            c = self.lista_clientes.nuevo_cliente_corporativo(
+            c = ListaClientes().nuevo_cliente_corporativo(
                 nombre, contacto, tc, tel, mail
             )
         else:
-            c = self.lista_clientes.nuevo_cliente_particular(
+            c = ListaClientes().nuevo_cliente_particular(
                 nombre, apellido, tel, mail
             )
 
@@ -140,7 +151,7 @@ Menú del sistema:
             fecha_entrega_propuesta = datetime.date(year, month, day)
 
             descripcion = input("Ingrese una descripcion para el trabajo: ")
-            t = self.lista_trabajos.nuevo_trabajo(
+            t = ListaTrabajos().nuevo_trabajo(
                 cliente, fecha_entrega_propuesta, descripcion, fecha_ingreso
             )
 
@@ -151,10 +162,108 @@ Menú del sistema:
 
     def mostrar_trabajos(self, lista=None):
         if lista == None:
-            lista = self.lista_trabajos.lista
+            lista = ListaTrabajos().lista
         for Trabajos in lista:
             print(Trabajos)
             print("==============================")
+
+    def modificar_trabajo(self):
+        id_trabajo = input("Ingrese el ID del trabajo: ")
+        trabajo = self.rt.get_one(id_trabajo)
+        if trabajo is None:
+            print("No existe el trabajo")
+        else:
+            print(trabajo)
+            date_entry = input("Ingrese una nueva fecha de ingreso con formato YYYY-MM-DD: ")
+            year, month, day = map(int, date_entry.split("-"))
+            fecha_ingreso = datetime.date(year, month, day)
+
+            date_entry = input(
+                "Ingrese una nueva fecha de entrega propuesta con formato YYYY-MM-DD: "
+            )
+            year, month, day = map(int, date_entry.split("-"))
+            fecha_entrega_propuesta = datetime.date(year, month, day)
+
+            descripcion = input("Ingrese una nueva descripcion para el trabajo: ")
+
+            trabajo.fecha_ingreso = fecha_ingreso
+            trabajo.fecha_entrega_propuesta = fecha_entrega_propuesta
+            trabajo.descripcion = descripcion
+
+            finalizado = "A"
+            while finalizado not in ("S", "s", "N", "n"):
+                finalizado = input("¿Fue finalizado? (S)í / (N)o: ")
+            if finalizado in ("S", "s"):
+                date_entry = input("Ingrese la fecha de finalización con formato YYYY-MM-DD: ")
+                year, month, day = map(int, date_entry.split("-"))
+                fecha_entrega = datetime.date(year, month, day)
+                trabajo.fecha_entrega_real = fecha_entrega
+            else:
+                trabajo.fecha_entrega_real = None
+
+            entregado = "A"
+            while entregado not in ("S", "s", "N", "n"):
+                entregado = input("¿Fue entregado? (S)í / (N)o: ")
+            if entregado in ("S", "s"):
+                trabajo.retirado = True
+            else:
+                trabajo.retirado = False
+
+            trabajo_modificado = self.rt.update(trabajo)
+            if trabajo_modificado is True:
+                print("El trabajo se modifico correctamente")
+            else:
+                print("No se pudo modificar")
+
+    def marcar_finalizado(self):
+        id_trabajo = input("Ingrese el ID del trabajo: ")
+        trabajo = self.rt.get_one(id_trabajo)
+        if trabajo is None:
+            print("No existe el trabajo")
+        else:
+            trabajo.fecha_entrega_real = datetime.date.today()
+            trabajo_modificado = self.rt.update(trabajo)
+            if trabajo_modificado is True:
+                print("El trabajo se modifico correctamente")
+                print("==============================")
+                print(trabajo)
+            else:
+                print("No se pudo modificar")
+
+    def marcar_entregado(self):
+        id_trabajo = input("Ingrese el ID del trabajo: ")
+        trabajo = self.rt.get_one(id_trabajo)
+        if trabajo is None:
+            print("No existe el trabajo")
+        else:
+            trabajo.retirado = True
+            trabajo_modificado = self.rt.update(trabajo)
+            if trabajo_modificado is True:
+                print("El trabajo se modifico correctamente")
+                print("==============================")
+                print(trabajo)
+            else:
+                print("No se pudo modificar")
+
+    def eliminar_trabajo(self):
+        id_trabajo = input("Ingrese el ID del trabajo: ")
+        trabajo = self.rt.get_one(id_trabajo)
+        if trabajo is None:
+            print("No existe el trabajo")
+        else:
+            trabajo_eliminado = self.rt.delete(trabajo)
+            if trabajo_eliminado is True:
+                print("El trabajo se elimino correctamente")
+            else:
+                print("No se pudo eliminar")
+
+    def imprimir_informe(self):
+        id_cliente = input("Ingrese el ID del cliente: ")
+        cliente = self.rc.get_one(id_cliente)
+        if cliente is None:
+            print("No existe el cliente")
+        else:
+            Informe().imprimir_informe(id_cliente)
 
     def salir(self):
         print("Gracias por utilizar el sistema.")
